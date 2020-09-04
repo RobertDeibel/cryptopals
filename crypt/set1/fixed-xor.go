@@ -16,9 +16,6 @@ func (e lengthMismatchError) Error() string {
 // FixedXorStr takes hex strings of same length and xors them after decoding
 // returns non nil error when strings not match or decoding fails
 func FixedXorStr(first, second string) ([]byte, string, error) {
-	if len(first) != len(second) {
-		return nil, "", lengthMismatchError{len(first), len(second)}
-	}
 
 	decodedFirst, err := hex.DecodeString(first)
 	if err != nil {
@@ -29,16 +26,21 @@ func FixedXorStr(first, second string) ([]byte, string, error) {
 		return nil, "", err
 	}
 
-	xor := FixedXor(decodedFirst, decodedSecond)
+	xor, err := FixedXor(decodedFirst, decodedSecond)
+	if err != nil {
+		return nil, "", err
+	}
 	return xor, hex.EncodeToString(xor), nil
 }
 
 // FixedXor takes hex byte arrays of same length and xors them after decoding
-// returns non nil error when strings not match or decoding fails
-func FixedXor(first, second []byte) []byte {
+func FixedXor(first, second []byte) ([]byte, error) {
+	if len(first) != len(second) {
+		return nil, lengthMismatchError{len(first), len(second)}
+	}
 	xor := make([]byte, len(first))
 	for i := range first {
 		xor[i] = first[i] ^ second[i]
 	}
-	return xor
+	return xor, nil
 }

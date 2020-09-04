@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	crypt "./crypt/set1"
 )
 
 type argumentNError uint
@@ -46,20 +48,39 @@ func (e argumentNError) Error() string {
 // 	fmt.Printf("xor successfull? %t\n", target == xorString)
 // }
 
+// func mainFixedXor() {
+// 	if len(os.Args) != 2 {
+// 		log.Fatal(argumentNError(len(os.Args) - 1))
+// 	}
+
+// 	hexString := os.Args[1]
+// 	cipher, key, _, err := crypt.DecodeSingleXor(hexString)
+
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	fmt.Printf("byte cypher: %v\n", cipher)
+// 	fmt.Printf("byte key: %b\n", key)
+// 	fmt.Printf("encoded cipher: %s\n", string(cipher))
+// 	fmt.Printf("encoded key: %s\n", string([]byte{key}))
+// }
+
 func main() {
-	if len(os.Args) != 2 {
+	checkArgLength(2)
+
+	file := os.Args[1]
+	cipher, key, score, line, err := crypt.DetectSingleXorPhrase(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("cipher: %s\ndecoded with key: %s and score %d in line %d\n", string(cipher), string(key), score, line)
+
+}
+
+func checkArgLength(num int) {
+	if len(os.Args) != num {
 		log.Fatal(argumentNError(len(os.Args) - 1))
 	}
-
-	hexString := os.Args[1]
-	cipher, key, _, err := Decode(hexString)
-
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("byte cypher: %v\n", cipher)
-	fmt.Printf("byte key: %b\n", key)
-	fmt.Printf("encoded cipher: %s\n", string(cipher))
-	fmt.Printf("encoded key: %s\n", string([]byte{key}))
 }

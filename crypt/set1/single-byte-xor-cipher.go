@@ -44,26 +44,38 @@ func score(hexBuffer []byte) int {
 	return score
 }
 
-// Decode attempts to decode a hex encoded string with letter frequency analysis
-// returns decoded byte array, and key in base 64
-func Decode(hexString string) ([]byte, byte, int, error) {
-	type keyScore struct {
-		Key   byte
-		Score int
-	}
+// DecodeSingleXorString attempts to decode a hex encoded string XORed with a single byte
+// by testing each possible byte and scoring based on letter frequency: 'ETAOIN SHRDLU'
+// returns decoded byte array, key as bytes and the score of the best solution
+func DecodeSingleXorString(hexString string) ([]byte, byte, int, error) {
 
 	decodedHex, err := hex.DecodeString(hexString)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
+	return DecodeSingleXor(decodedHex)
+}
+
+// DecodeSingleXor attempts to decode a byte array XORed with a single byte
+// by testing each possible byte and scoring based on letter frequency: 'ETAOIN SHRDLU'
+// returns decoded byte array, key as bytes and the score of the best solution
+func DecodeSingleXor(input []byte) ([]byte, byte, int, error) {
+	type keyScore struct {
+		Key   byte
+		Score int
+	}
+
 	results := make([]keyScore, 256)
 	for key := 0; key < 256; key++ {
-		keyBuffer := make([]byte, len(decodedHex))
+		keyBuffer := make([]byte, len(input))
 		for i := range keyBuffer {
 			keyBuffer[i] = byte(key)
 		}
-		buf := FixedXor(decodedHex, keyBuffer)
+		buf, err := FixedXor(input, keyBuffer)
+		if err != nil {
+			return nil, 0, 0, err
+		}
 		score := score(buf)
 		results[key] = keyScore{byte(key), score}
 	}
@@ -73,9 +85,9 @@ func Decode(hexString string) ([]byte, byte, int, error) {
 	})
 
 	best := results[0]
-	bestBuffer := make([]byte, len(decodedHex))
-	for i := range decodedHex {
-		bestBuffer[i] = decodedHex[i] ^ best.Key
+	bestBuffer := make([]byte, len(input))
+	for i := range input {
+		bestBuffer[i] = input[i] ^ best.Key
 	}
 
 	return bestBuffer, best.Key, best.Score, nil
