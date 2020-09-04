@@ -1,4 +1,4 @@
-package main
+package crypt
 
 import (
 	"encoding/hex"
@@ -13,9 +13,9 @@ func (e lengthMismatchError) Error() string {
 	return fmt.Sprintf("lengths %v and %v do not match", e.first, e.second)
 }
 
-// FixedXor takes hex strings of same length and xors them after decoding
+// FixedXorStr takes hex strings of same length and xors them after decoding
 // returns non nil error when strings not match or decoding fails
-func FixedXor(first, second string) ([]byte, string, error) {
+func FixedXorStr(first, second string) ([]byte, string, error) {
 	if len(first) != len(second) {
 		return nil, "", lengthMismatchError{len(first), len(second)}
 	}
@@ -29,9 +29,16 @@ func FixedXor(first, second string) ([]byte, string, error) {
 		return nil, "", err
 	}
 
-	xor := make([]byte, len(decodedFirst))
-	for i := range decodedFirst {
-		xor[i] = decodedFirst[i] ^ decodedSecond[i]
-	}
+	xor := FixedXor(decodedFirst, decodedSecond)
 	return xor, hex.EncodeToString(xor), nil
+}
+
+// FixedXor takes hex byte arrays of same length and xors them after decoding
+// returns non nil error when strings not match or decoding fails
+func FixedXor(first, second []byte) []byte {
+	xor := make([]byte, len(first))
+	for i := range first {
+		xor[i] = first[i] ^ second[i]
+	}
+	return xor
 }
